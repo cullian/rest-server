@@ -6,8 +6,7 @@ var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
 var mongoose = require('mongoose');
 var passport = require('passport');
-var LocalStrategy = require('passport-local').Strategy;
-
+var authenticate = require('./authenticate');
 var config = require('./config');
 
 mongoose.connect(config.mongoUrl);
@@ -18,11 +17,13 @@ db.once('open', function () {
   console.log("Connected correctly to server");
 });
 
+// Routes
 var routes = require('./routes/index');
 var users = require('./routes/users');
 var dishRouter = require('./routes/dishRouter');
 var promoRouter = require('./routes/promoRouter');
 var leaderRouter = require('./routes/leaderRouter');
+var favoriteRouter = require('./routes/favoriteRouter'); // require favorite router
 
 var app = express();
 
@@ -48,11 +49,7 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
 
 // passport config
-var User = require('./models/user');
 app.use(passport.initialize());
-passport.use(new LocalStrategy(User.authenticate()));
-passport.serializeUser(User.serializeUser());
-passport.deserializeUser(User.deserializeUser());
 
 app.use(express.static(path.join(__dirname, 'public')));
 
@@ -61,6 +58,7 @@ app.use('/users', users);
 app.use('/dishes', dishRouter);
 app.use('/promotions', promoRouter);
 app.use('/leadership', leaderRouter);
+app.use('/favorites', favoriteRouter);  // mounted favorite router to /favorites endpoint
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {
